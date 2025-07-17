@@ -9,7 +9,7 @@ A serverless API that transforms raw multivariate time-series health data and a 
 
 ## 2. High-Level Architecture
 
-The system is built on AWS CDK, deploying an API Gateway, Lambda, Timestream, and Bedrock integration. Lambda functions validate and summarize incoming data, query Timestream if needed, and invoke Bedrock for LLM inference. All infrastructure is managed as code for reproducibility and scale. See the architecture diagram below and in [docs/architecture.md](docs/architecture.md):
+The system is built on AWS CDK, deploying an API Gateway, Lambda, Timestream, and Bedrock integration. Lambda functions validate and summarize incoming data, query Timestream if needed, and invoke Bedrock for LLM inference. All infrastructure is managed as code for reproducibility and scale. See the architecture diagram below and in [docs/architecture.mmd](docs/architecture.mmd):
 
 ```mermaid
 graph TD
@@ -56,6 +56,6 @@ graph TD
 
 ## 7. Artefacts & Further Docs
 
-- [docs/architecture.md](docs/architecture.md) – System architecture diagram (Mermaid)
+- [docs/architecture.mmd](docs/architecture.mmd) – System architecture diagram (Mermaid)
 - [docs/dependency-graph.mmd](docs/dependency-graph.mmd) – Code dependency graph
 - [docs/TECH_DEBT.md](docs/TECH_DEBT.md) – Technical debt registry
