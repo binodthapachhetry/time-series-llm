@@ -57,5 +57,5 @@ graph TD
 ## 7. Artefacts & Further Docs
 
 - [docs/architecture.md](docs/architecture.md) – System architecture diagram (Mermaid)
-- [docs/dependency-graph.md](docs/dependency-graph.md) – Code dependency graph
+- [docs/dependency-graph.mmd](docs/dependency-graph.mmd) – Code dependency graph
 - [docs/TECH_DEBT.md](docs/TECH_DEBT.md) – Technical debt registry
