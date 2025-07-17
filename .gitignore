@@ -1,1 +1,3 @@
 **/__pycache__
+.aider*
+infra/cdk.out

@@ -1,6 +1,6 @@
 graph TD
     User -->|POST /query| APIGW
-    APIGW --> Lambda
+    APIGateway --> Lambda
     Lambda -->|SELECT*| Timestream
     Lambda -->|InvokeModel| Bedrock
     Bedrock --> Lambda

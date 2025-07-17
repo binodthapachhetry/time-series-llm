@@ -6,6 +6,7 @@ from aws_cdk import (
     aws_lambda as _lambda,
     aws_apigatewayv2_alpha as apigw,
     aws_apigatewayv2_integrations_alpha as integrations,
+    aws_iam as iam, 
     CfnOutput,
 )
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
@@ -40,7 +41,24 @@ class ApiStack(Stack):
                 "MODEL_ID": data.model_id,
             },
         )
-        fn.role.add_managed_policy(data.lambda_policy)
+        
+        # Inline IAM permissions required by Lambda
+        fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=[
+                    "timestream:DescribeEndpoints",
+                    "timestream:Select",
+                    "timestream:SelectValues",
+                ],
+                resources=["*"],  # tighten later
+            )
+        )
+        fn.add_to_role_policy(
+            iam.PolicyStatement(
+                actions=["bedrock:InvokeModel"],
+                resources=["*"],  # or specific model ARN
+            )
+        )
 
         api = apigw.HttpApi(
             self,
