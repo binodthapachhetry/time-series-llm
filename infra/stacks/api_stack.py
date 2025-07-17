@@ -22,8 +22,9 @@ class ApiStack(Stack):
             environment ={
                 "DB_NAME":   data.db_name,
                 "TABLE":     data.tbl_name,
-                "MODEL_ID":  data.model_id,
-            })
+                "MODEL_ID":  data.model_id},
+                deps_lock_file_path="src/requirements.txt",
+            )
         fn.role.add_managed_policy(data.lambda_policy)
 
         api = apigw.HttpApi(self, "PublicAPI",
