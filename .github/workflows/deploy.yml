@@ -25,7 +25,9 @@ jobs:
       - name: CDK synth & deploy
         run: |
           npm i -g aws-cdk
-          cdk bootstrap   # first run only
-          cdk deploy --require-approval never --all
           pip install -r infra/requirements.txt
           pip install -r src/requirements.txt
+
+          cdk bootstrap   # first run only
+          cdk deploy --require-approval never --all
+
