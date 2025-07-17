@@ -13,13 +13,13 @@ The system is built on AWS CDK, deploying an API Gateway, Lambda, Timestream, an
 
 ```mermaid
 graph TD
-    User -->|POST /query| API Gateway
-    API Gateway --> Lambda
+    User -->|POST /query| APIGateway
+    APIGateway --> Lambda
     Lambda -->|SELECT*| Timestream
     Lambda -->|InvokeModel| Bedrock
     Bedrock --> Lambda
-    Lambda -->|JSON answer| API Gateway
-    API Gateway --> User
+    Lambda -->|JSON answer| APIGateway
+    APIGateway --> User
 ```
 
 ## 3. Data & Control Flow
