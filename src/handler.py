@@ -2,20 +2,24 @@ import json, os, boto3
 import utils
 
 
-bedrock   = boto3.client("bedrock-runtime")
-ts_q      = boto3.client("timestream-query")
+# Bedrock is still required
+bedrock = boto3.client("bedrock-runtime")
 
-DB  = os.getenv("DB_NAME")
-TBL = os.getenv("TABLE")
+# ── TEMPORARILY DISABLE AWS TIMESTREAM ────────────────────────────────
+# Replace the Timestream client with a stub that always returns an
+# empty result set, preventing any network calls or data access.
+def _noop(*_, **__):
+    return {"Rows": []}
+
+ts_q = type("NoTimestreamClient", (), {"query": staticmethod(_noop)})()
+
+DB  = os.getenv("DB_NAME", "")
+TBL = os.getenv("TABLE", "")
 MODEL_ID = os.getenv("MODEL_ID")
 
-def fetch_latest(series: str, hours: int = 168):
-    q = (f"SELECT measure_value::double AS val, time "
-         f"FROM \"{DB}\".\"{TBL}\" "
-         f"WHERE measure_name = '{series}' "
-         f"AND time > ago({hours}h)")
-    rows = ts_q.query(QueryString=q)["Rows"]
-    return [float(r['Data'][0]['ScalarValue']) for r in rows]
+def fetch_latest(series: str, hours: int = 168):  # pylint: disable=unused-argument
+    """Timestream access disabled: return no data."""
+    return []
 
 
 def handler(event, _):
