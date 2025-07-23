@@ -17,6 +17,7 @@ Design notes
 
 from __future__ import annotations
 from typing import Dict, List, Sequence, Tuple, Optional
+import json
 import math
 import statistics as stats
 # import numpy as np
@@ -228,22 +229,15 @@ def trim_text_to_tokens(text: str, max_tokens: int) -> str:
 # ------------------------------------------------------------------ #
 
 def build_context_from_payload(
-    prompt: str,
+    _prompt: str,
     ts_dict: Dict[str, List[float]],
     max_context_tokens: int = 700,
 ) -> str:
     """
-    Validate timeseries dict & produce bounded context string.
-
-    Caller may *also* supply fetched backend series; merge by precedence:
-    request (ts_dict) overrides backend.
+    Return **raw vitals JSON** (not pre-aggregated). The LLM is now
+    responsible for any descriptive statistics.
     """
-    g = ts_dict.get("glucose")
-    w = ts_dict.get("weight")
-    s = ts_dict.get("bp_sys")
-    d = ts_dict.get("bp_dia")
-
-    ctx = summarise_vitals(g, w, s, d)
+    ctx = json.dumps(ts_dict, separators=(",", ":"))  # compact JSON
     if est_tokens(ctx) > max_context_tokens:
         ctx = trim_text_to_tokens(ctx, max_context_tokens)
     return ctx

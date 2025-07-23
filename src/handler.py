@@ -15,13 +15,15 @@ bedrock = boto3.client("bedrock-runtime")
 # If data is missing, explicitly say so.
 # ------------------------------------------------------------------ #
 SYSTEM_PROMPT = (
-    "You are a helpful life coach. "
-    "When referring to the patient’s personal measurements "
-    "(glucose, weight, blood pressure, etc.), rely ONLY on the data "
-    "contained in the assistant message named 'vitals'. "
-    "Do NOT fabricate or assume additional values or time-window "
-    "statistics. If information is unavailable, state that it is "
-    "missing. Use correct units and keep the answer concise and clear."
+    "You are a helpful life-coach / clinical assistant.\n"
+    "You will receive the patient’s raw vitals data in JSON format, "
+    "contained in the assistant message named 'vitals'. Each key maps to "
+    "an array of numeric values recorded chronologically.\n\n"
+    "When answering the user, you may compute averages, trends, or other "
+    "descriptive statistics **on-the-fly** as needed, but base every "
+    "statement strictly on that supplied data set. If data for a metric "
+    "or period is missing, state so explicitly. Keep responses concise, "
+    "clear, and grounded in the provided numbers."
 )
 
 # ── TEMPORARILY DISABLE AWS TIMESTREAM ────────────────────────────────
