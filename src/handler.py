@@ -50,6 +50,13 @@ def handler(event, _):
         ],
         "max_tokens": 400,
     }
+    if not MODEL_ID:                     # extra runtime safety
+        return {
+            "statusCode": 500,
+            "headers": {"Content-Type": "application/json"},
+            "body": json.dumps({"error": "MODEL_ID not configured on Lambda"})
+        }
+
     resp = bedrock.invoke_model(modelId=MODEL_ID,
                                 body=json.dumps(payload).encode())
     answer = json.loads(resp['body'].read())['content']

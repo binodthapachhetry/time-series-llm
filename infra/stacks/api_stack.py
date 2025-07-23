@@ -38,6 +38,15 @@ class ApiStack(Stack):
             or os.environ.get("MODEL_ID", "")
         )
 
+        # ── guard rail: stop synthesis/deploy if MODEL_ID is missing ──
+        if not model_id:  # pragma: no cover
+            raise ValueError(
+                "Bedrock model identifier (MODEL_ID) not supplied.\n"
+                "Provide it via CDK context, e.g.:\n"
+                "    cdk deploy -c MODEL_ID=<bedrock-model-id>\n"
+                "or export MODEL_ID=<bedrock-model-id> before running CDK."
+            )
+
         fn = PythonFunction(
             self,
             "TimeseriesAgent",
