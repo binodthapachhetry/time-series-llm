@@ -22,12 +22,29 @@ import statistics as stats
 # import numpy as np
 
 # ------------------------------------------------------------------ #
+#  Field-name aliases accepted from client payloads
+# ------------------------------------------------------------------ #
+# external key  →  internal canonical key used in the rest of codebase
+_ALIASES = {
+    "systolic":  "bp_sys",
+    "diastolic": "bp_dia",
+}
+
+# ------------------------------------------------------------------ #
 # Validation / Coercion
 # ------------------------------------------------------------------ #
 
 def _coerce_val(x) -> Optional[float]:
+    """
+    Convert one raw element to float.
+    • Supports primitives (int/float/str) and objects like
+      {"timestamp": "...", "value": 123}.
+    """
+    # extract {"value": ..} pattern
+    if isinstance(x, dict):
+        x = x.get("value")
     try:
-        if x is None: 
+        if x is None:
             return None
         v = float(x)
         if math.isnan(v) or math.isinf(v):
@@ -42,34 +59,48 @@ def coerce_series(seq: Sequence) -> List[float]:
 
 def validate_payload(payload: Dict) -> Tuple[str, Dict[str, List[float]]]:
     """
-    Validate top-level event body dict already JSON-decoded.
+    Extract the user question and normalised timeseries dict.
 
-    Expected:
-      {
-        "prompt": "string",
-        "timeseries": {
-            "glucose": [...],
-            "weight": [...],
-            "bp_sys": [...],
-            "bp_dia": [...]
-        }
-      }
-
-    Returns: (prompt, cleaned_timeseries_dict)
-    Raises: ValueError on required-field problems.
+    Accepts *either* a flat structure or nested `"timeseries"` object.
+    Handles client aliases via `_ALIASES` map above.
     """
-    if "prompt" not in payload or not isinstance(payload["prompt"], str) or not payload["prompt"].strip():
+    if not isinstance(payload, dict):
+        raise ValueError("Payload must be a JSON object.")
+
+    prompt = payload.get("prompt") or payload.get("question") or payload.get("query")
+    if not isinstance(prompt, str) or not prompt.strip():
         raise ValueError("Missing or empty 'prompt' field.")
-    ts_in = payload.get("timeseries", {})
-    if not isinstance(ts_in, dict):
-        raise ValueError("'timeseries' must be an object.")
-    cleaned = {k: coerce_series(v) for k, v in ts_in.items() if isinstance(v, (list, tuple))}
-    # Optional: enforce max length to keep payloads small
+
+    # ------------------------------------------------------------------
+    # 1. collect raw series (supports both payload shapes)
+    # ------------------------------------------------------------------
+    raw_ts: Dict[str, Sequence] = {}
+    # flat keys
+    raw_ts.update({k: v for k, v in payload.items() if k not in ("prompt", "question", "query", "timeseries")})
+    # nested "timeseries"
+    nested = payload.get("timeseries", {})
+    if isinstance(nested, dict):
+        raw_ts.update(nested)
+
+    # ------------------------------------------------------------------
+    # 2. normalise keys & coerce values
+    # ------------------------------------------------------------------
+    cleaned: Dict[str, List[float]] = {}
+    for key, seq in raw_ts.items():
+        if not isinstance(seq, (list, tuple)):
+            continue
+        canon = _ALIASES.get(key, key)
+        if canon not in ("glucose", "weight", "bp_sys", "bp_dia"):
+            continue  # silently ignore unknown series
+        cleaned[canon] = coerce_series(seq)
+
+    # 3. enforce max length
     MAX_INPUT_POINTS = 10_000
     for k, v in cleaned.items():
         if len(v) > MAX_INPUT_POINTS:
             cleaned[k] = v[-MAX_INPUT_POINTS:]
-    return payload["prompt"].strip(), cleaned
+
+    return prompt.strip(), cleaned
 
 # ------------------------------------------------------------------ #
 # Stats helpers (safe on short series)
