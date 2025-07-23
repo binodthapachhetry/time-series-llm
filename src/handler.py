@@ -5,6 +5,25 @@ import utils
 # Bedrock is still required
 bedrock = boto3.client("bedrock-runtime")
 
+# ------------------------------------------------------------------ #
+#  SYSTEM PROMPT                                                     #
+# ------------------------------------------------------------------ #
+# All personalised statements **must** be grounded solely in the
+# vitals data supplied in the assistant message named "vitals".
+# Never invent statistics for periods (e.g. 7-day, 30-day averages)
+# unless that span is represented in the provided data.
+# If data is missing, explicitly say so.
+# ------------------------------------------------------------------ #
+SYSTEM_PROMPT = (
+    "You are a helpful clinical assistant. "
+    "When referring to the patient’s personal measurements "
+    "(glucose, weight, blood pressure, etc.), rely ONLY on the data "
+    "contained in the assistant message named 'vitals'. "
+    "Do NOT fabricate or assume additional values or time-window "
+    "statistics. If information is unavailable, state that it is "
+    "missing. Use correct units and keep the answer concise and clear."
+)
+
 # ── TEMPORARILY DISABLE AWS TIMESTREAM ────────────────────────────────
 # Replace the Timestream client with a stub that always returns an
 # empty result set, preventing any network calls or data access.
@@ -43,12 +62,11 @@ def handler(event, _):
     context = utils.build_context_from_payload(userQ, ts_dict)
     payload = {
         "messages": [
-            {"role": "system",
-             "content": "You are a helpful clinical assistant."},
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "assistant", "name": "vitals", "content": context},
             {"role": "user", "content": userQ},
         ],
-        "max_tokens": 400,
+        "max_tokens": 500,
     }
     if not MODEL_ID:                     # extra runtime safety
         return {
