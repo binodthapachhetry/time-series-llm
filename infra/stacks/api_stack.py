@@ -1,5 +1,8 @@
+# built-ins
+import os
 from pathlib import Path
 
+# CDK
 from aws_cdk import (
     Stack,
     Duration,
@@ -12,11 +15,14 @@ from aws_cdk import (
 from aws_cdk.aws_lambda_python_alpha import PythonFunction
 from constructs import Construct
 
-from .data_stack import DataProps
-
-
 class ApiStack(Stack):
-    def __init__(self, scope: Construct, id: str, data: DataProps, **kw) -> None:
+    """
+    Public HTTP API backed by the TimeseriesAgent Lambda.
+    Timestream is currently disabled, so this stack no longer depends
+    on the DataStack (or its DataProps).
+    """
+
+    def __init__(self, scope: Construct, id: str, **kw) -> None:
         super().__init__(scope, id, **kw)
 
         # locate repo root: this file -> stacks -> infra -> (repo root)
@@ -26,33 +32,27 @@ class ApiStack(Stack):
         if not src_path.exists():
             raise FileNotFoundError(f"Lambda source dir not found: {src_path}")
 
+        # Obtain the Bedrock model identifier from CDK context or env var.
+        model_id = (
+            self.node.try_get_context("MODEL_ID")
+            or os.environ.get("MODEL_ID", "")
+        )
+
         fn = PythonFunction(
             self,
             "TimeseriesAgent",
-            entry=str(src_path),  # directory containing handler.py
-            index="handler.py",   # file inside entry dir
-            handler="handler",    # function name in handler.py
+            entry=str(src_path),
+            index="handler.py",
+            handler="handler",
             runtime=_lambda.Runtime.PYTHON_3_11,
             memory_size=512,
             timeout=Duration.seconds(10),
             environment={
-                "DB_NAME": data.db_name,
-                "TABLE": data.tbl_name,
-                "MODEL_ID": data.model_id,
+                "MODEL_ID": model_id,
             },
         )
-        
-        # Inline IAM permissions required by Lambda
-        fn.add_to_role_policy(
-            iam.PolicyStatement(
-                actions=[
-                    "timestream:DescribeEndpoints",
-                    "timestream:Select",
-                    "timestream:SelectValues",
-                ],
-                resources=["*"],  # tighten later
-            )
-        )
+
+        # Only Bedrock permissions are needed while Timestream is disabled.
         fn.add_to_role_policy(
             iam.PolicyStatement(
                 actions=["bedrock:InvokeModel"],
