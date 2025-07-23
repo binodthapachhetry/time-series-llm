@@ -110,6 +110,8 @@ def handler(event, _):
         if answer is None:  # final fallback – return entire JSON
             answer = json.dumps(body_json)
 
-    return {"statusCode":200,
-            "headers":{"Content-Type":"application/json"},
-            "body":json.dumps({"answer":answer})}
+    return {
+        "statusCode": 200,
+        "headers": {"Content-Type": "application/json; charset=utf-8"},
+        "body": json.dumps({"answer": answer}, ensure_ascii=False),
+    }

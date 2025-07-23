@@ -141,11 +141,12 @@ def describe_series(
     if not x:
         return f"No {label} data available."
 
-    mean_short = _safe_mean(x[-short_window:]) if len(x) >= 1 else None
-    mean_long  = _safe_mean(x[-long_window:])  if len(x) >= 1 else None
+    # Show rolling averages only when we have *enough* points.
+    mean_short = _safe_mean(x[-short_window:]) if len(x) >= short_window else None
+    mean_long  = _safe_mean(x[-long_window:])  if len(x) >= long_window else None
     latest     = _latest(x)
-    delta_long = _delta(x, min(long_window, len(x)))
-    pct_long   = _pct_change(x, min(long_window, len(x)))
+    delta_long = _delta(x, long_window) if len(x) >= long_window else None
+    pct_long   = _pct_change(x, long_window) if len(x) >= long_window else None
 
     parts = []
     if latest is not None:
