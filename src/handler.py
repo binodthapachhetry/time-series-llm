@@ -15,7 +15,7 @@ bedrock = boto3.client("bedrock-runtime")
 # If data is missing, explicitly say so.
 # ------------------------------------------------------------------ #
 SYSTEM_PROMPT = (
-    "You are a helpful clinical assistant. "
+    "You are a helpful life coach. "
     "When referring to the patient’s personal measurements "
     "(glucose, weight, blood pressure, etc.), rely ONLY on the data "
     "contained in the assistant message named 'vitals'. "
@@ -66,7 +66,7 @@ def handler(event, _):
             {"role": "assistant", "name": "vitals", "content": context},
             {"role": "user", "content": userQ},
         ],
-        "max_tokens": 500,
+        "max_tokens": 2000,
     }
     if not MODEL_ID:                     # extra runtime safety
         return {
