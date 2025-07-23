@@ -57,9 +57,41 @@ def handler(event, _):
             "body": json.dumps({"error": "MODEL_ID not configured on Lambda"})
         }
 
-    resp = bedrock.invoke_model(modelId=MODEL_ID,
-                                body=json.dumps(payload).encode())
-    answer = json.loads(resp['body'].read())['content']
+    # -----------------------------------------------------------------
+    # Invoke Bedrock and robustly extract the assistant’s reply.
+    # Different foundation models return slightly different response
+    # shapes, so we fall-back through several possibilities instead of
+    # assuming a top-level “content” key.
+    # -----------------------------------------------------------------
+    resp = bedrock.invoke_model(
+        modelId=MODEL_ID,
+        body=json.dumps(payload).encode(),
+    )
+
+    raw_body = resp["body"].read()
+
+    try:
+        body_json = json.loads(raw_body)
+    except json.JSONDecodeError:
+        # Model returned plain text – use it directly.
+        answer = raw_body.decode("utf-8", errors="ignore")
+    else:
+        # Common patterns across Bedrock providers
+        answer = (
+            body_json.get("content")                                  # Claude/Anthropic
+            or (body_json.get("message") or {}).get("content")        # Meta/DeepSeek “message”
+            or (
+                body_json.get("choices", [{}])[0]                     # OpenAI-style
+                .get("message", {})
+                .get("content")
+                if body_json.get("choices") else None
+            )
+            or body_json.get("results", [{}])[0].get("outputText")    # AI21-style
+        )
+
+        if answer is None:  # final fallback – return entire JSON
+            answer = json.dumps(body_json)
+
     return {"statusCode":200,
             "headers":{"Content-Type":"application/json"},
             "body":json.dumps({"answer":answer})}
