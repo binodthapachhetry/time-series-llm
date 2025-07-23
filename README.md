@@ -37,9 +37,10 @@ graph TD
 - **CDK Infrastructure-as-Code**: Ensures reproducible, auditable deployments.
 - **Amazon Bedrock**: Chosen for secure, managed LLM inference with clinical compliance.
 - **Defensive Token Budgeting**: Truncates context to avoid runaway costs and latency.
-- **Data Fallback**: If client omits timeseries, Lambda fetches from Timestream for resilience.
+- **Raw-Data Delegation**: Descriptive statistics are shifted to the LLM, reducing Lambda logic and token usage.
+- **Timestream Disabled**: Prototype currently avoids AWS persistence for faster iteration and lower cost; can be re-enabled behind the `USE_TIMESTREAM` flag.
+- **Stateless API**: No user data is persisted server-side while Timestream is disabled.
 - **IAM Policy**: Lambda permissions are broad for prototype; will be tightened for least-privilege.
-- **Stateless API**: No user data is persisted outside Timestream.
 
 ## 5. Operational Characteristics
 
